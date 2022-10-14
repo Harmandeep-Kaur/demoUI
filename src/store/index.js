@@ -1,7 +1,7 @@
 import { createStore } from "vuex";
 import axios from "axios";
 
-const baseURL = "http://localhost:3008/api/v1/user/createProfile"
+const baseURL = process.env.VUE_APP_URL
 
 export default createStore({
     state: {
@@ -50,7 +50,6 @@ export default createStore({
     },
     actions: {
         postData(context, data) {
-            console.log(data, 'in store')
             axios.post(baseURL, data).then(res => {
                 alert(res.status, 'data added successfully')
             }).catch(err => {
