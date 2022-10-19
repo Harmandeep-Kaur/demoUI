@@ -1,6 +1,13 @@
 <template>
   <div class="q-pa-md">
-    <q-stepper v-model="step" dark ref="stepper" color="primary" animated>
+    <q-stepper
+      v-model="step"
+      dark
+      ref="stepper"
+      active-color="warning"
+      done-color="secondary"
+      animated
+    >
       <q-step :name="1" title="Client Info" icon="info" :done="step > 1">
         <div class="row">
           <div class="col">
@@ -111,46 +118,18 @@
         </div>
         <div class="row">
           <div class="col">
-            <q-input
-              dark
+            <vue-tel-input
+              class="mobileNumber"
               v-model="formData.opportunity_mobile"
-              square
-              outlined
-              type="tel"
-              label="MobileNumber*"
-            >
-              <!-- <template v-slot:prepend>
-                <q-select
-                  dark
-                  borderless
-                  style="width: 150px"
-                  v-model="countryCode"
-                  :options="countryCodeOptions"
-                  label="Country Code"
-                />
-              </template> -->
-            </q-input>
+              @on-input="mobileInput"
+            ></vue-tel-input>
           </div>
           <div class="col">
-            <q-input
-              dark
+            <vue-tel-input
+              class="mobileNumber"
               v-model="formData.opportunity_landline"
-              square
-              outlined
-              type="tel"
-              label="Landline"
-            >
-              <!-- <template v-slot:prepend>
-                <q-select
-                  dark
-                  borderless
-                  style="width: 150px"
-                  v-model="countryCode"
-                  :options="countryCodeOptions"
-                  label="Country Code"
-                />
-              </template> -->
-            </q-input>
+              @on-input="landlineInput"
+            ></vue-tel-input>
           </div>
         </div>
         <div class="row">
@@ -275,12 +254,14 @@
           </div>
           <div class="col">
             <q-input
+              dark
               v-model="formData.opportunity_stove_cost"
               label="Stove Cost"
             />
           </div>
           <div class="col">
             <q-input
+              dark
               v-model="formData.opportunity_extra_cost"
               label="Total Extra Cost"
             />
@@ -522,22 +503,11 @@
             />
           </div>
           <div class="col">
-            <q-input
-              dark
+            <vue-tel-input
+              class="salesMobile"
               v-model="formData.opportunity_sale_mobile"
-              square
-              outlined
-              label="Mobile Number*"
-            >
-              <!-- <template v-slot:prepend>
-                <q-select
-                  style="width: 150px"
-                  v-model="formData.countryCode"
-                  :options="countryCodeOptions"
-                  label="Country Code"
-                />
-              </template> -->
-            </q-input>
+              @on-input="salesMobileInput"
+            ></vue-tel-input>
           </div>
         </div>
       </q-step>
@@ -546,7 +516,7 @@
         <span>{{ error }}</span>
         <q-stepper-navigation>
           <q-btn
-            @click.prevent.stop="submitForm"
+            @click="submitForm"
             color="primary"
             :label="step === 4 ? 'Submit' : 'Next'"
           />
@@ -568,6 +538,7 @@
 import { ref } from "vue";
 import { useStore } from "vuex";
 import { useQuasar } from "quasar";
+import axios from "axios";
 
 export default {
   name: "App",
@@ -584,6 +555,49 @@ export default {
     const formData = store.state.formData;
     const error = "";
     const load = useQuasar();
+
+    const submitForm = () => {
+      console.log("submit clicked", formData);
+      if (step.value === 4) {
+        console.log("store", store, store.value);
+        store.dispatch("postData", formData);
+      } else if (step.value === 1) {
+        firstnameRef.value?.validate();
+        lastnameRef.value?.validate();
+        idRef.value?.validate();
+        emailRef.value?.validate();
+
+        if (
+          firstnameRef.value?.hasError ||
+          lastnameRef.value?.hasError ||
+          idRef.value?.hasError ||
+          emailRef.value?.hasError
+        ) {
+          // form has error
+          console.log("error");
+        } else {
+          console.log(step, step.value);
+          step.value += 1;
+        }
+      } else {
+        step.value += 1;
+        // step.value?.next();
+      }
+    };
+
+    const mobileInput = (number, phoneObject) => {
+      console.log(phoneObject.number, "phoneObject");
+      return (formData.opportunity_mobile = phoneObject.number);
+    };
+    const landlineInput = (number, phoneObject) => {
+      console.log(phoneObject.number, "phoneObject");
+      return (formData.opportunity_landline = phoneObject.number);
+    };
+    const salesMobileInput = (number, phoneObject) => {
+      console.log(phoneObject.number, "phoneObject");
+      return (formData.opportunity_sale_mobile = phoneObject.number);
+    };
+
     return {
       step,
       firstnameRef,
@@ -596,32 +610,32 @@ export default {
       error,
       load,
       requiredRules: [(val) => (val && val.length > 0) || "Field Required"],
+      submitForm,
+      mobileInput,
+      landlineInput,
+      salesMobileInput,
     };
   },
   methods: {
-    async submitForm() {
-      if (this.step === 4) {
-        this.$store.dispatch("postData", this.formData);
-      } else if (this.step === 1) {
-        this.firstnameRef.validate();
-        this.lastnameRef.validate();
-        this.idRef.validate();
-        this.emailRef.validate();
+    async fileUpload(e) {
+      const file = e.target?.files[0];
 
-        if (
-          this.firstnameRef.hasError ||
-          this.lastnameRef.hasError ||
-          this.idRef.hasError ||
-          this.emailRef.hasError
-        ) {
-          // form has error
-          console.log("error");
-        } else {
-          this.$refs.stepper.next();
-        }
-      } else {
-        this.$refs.stepper.next();
-      }
+      let formData = new FormData();
+      formData.append("file", file);
+      this.load.loading.show();
+      await axios
+        .post("http://localhost:3008/uploadfile", formData)
+        .then((res) => {
+          if (res) {
+            this.load.loading.hide();
+            console.log(res);
+          }
+        })
+        .catch((error) => {
+          this.load.loading.hide();
+
+          console.error(error);
+        });
     },
   },
 };
@@ -637,5 +651,24 @@ export default {
 }
 .row {
   margin: 5px 5px;
+}
+.mobileNumber {
+  margin: 9px;
+  height: 100%;
+  border: 0;
+}
+.salesMobile {
+  height: 56px;
+  margin: 9px;
+}
+.vti__input {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+}
+.vti__dropdown-list {
+  background-color: #000 !important;
+}
+.vti__dropdown-item.highlighted {
+  background-color: darkred !important;
 }
 </style>
