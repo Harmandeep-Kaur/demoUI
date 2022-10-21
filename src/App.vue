@@ -3,12 +3,19 @@
     <q-stepper
       v-model="step"
       dark
+      header-nav
       ref="stepper"
       active-color="warning"
-      done-color="secondary"
+      done-color="grey"
       animated
     >
-      <q-step :name="1" title="Client Info" icon="info" :done="step > 1">
+      <q-step
+        :name="1"
+        title="Client Info"
+        icon="info"
+        :done="step > 1"
+        :header-nav="step > 1"
+      >
         <div class="row">
           <div class="col">
             <q-radio
@@ -16,7 +23,7 @@
               v-model="formData.opportunity_client_type"
               val="Individual"
             >
-              Individual</q-radio
+              Individual(s)</q-radio
             >
             <q-radio
               dark
@@ -42,6 +49,10 @@
               2 Person
             </q-radio>
           </div>
+        </div>
+
+        <div v-if="formData.opportunity_client_no === '2 Person'">
+          <h6>Details of First Person</h6>
         </div>
         <div class="row">
           <q-radio
@@ -152,6 +163,123 @@
             />
           </div>
         </div>
+
+        <div v-if="formData.opportunity_client_no === '2 Person'">
+          <h6>Details of Second Person</h6>
+          <div class="row">
+            <q-radio
+              dark
+              v-model="formData.opportunity_martial_status"
+              val="notMarried"
+            >
+              Not Married</q-radio
+            >
+            <q-radio
+              dark
+              v-model="formData.opportunity_martial_status"
+              val="married-anc"
+            >
+              Married-ANC</q-radio
+            >
+            <q-radio
+              dark
+              v-model="formData.opportunity_martial_status"
+              val="married-cop"
+            >
+              Married-COP</q-radio
+            >
+          </div>
+          <div class="row">
+            <div class="col">
+              <q-input
+                ref="firstnameSecRef"
+                dark
+                v-model="formData.opportunity_firstname_sec"
+                square
+                outlined
+                label="First Name*"
+                :rules="requiredRules"
+              />
+            </div>
+            <div class="col">
+              <q-input
+                ref="lastnameSecRef"
+                dark
+                v-model="formData.opportunity_lastname_sec"
+                square
+                outlined
+                label="Last Name*"
+                :rules="requiredRules"
+              />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <q-input
+                ref="idSecRef"
+                dark
+                type="number"
+                v-model="formData.opportunity_id_sec"
+                square
+                outlined
+                label="ID Number*"
+                :rules="requiredRules"
+              />
+            </div>
+            <div class="col">
+              <q-input
+                dark
+                ref="emailSecRef"
+                v-model="formData.opportunity_email_sec"
+                type="email"
+                square
+                outlined
+                label="Email*"
+                :rules="requiredRules"
+              />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <vue-tel-input
+                class="mobileNumber"
+                v-model="formData.opportunity_mobile_sec"
+                @on-input="mobileInputSec"
+              ></vue-tel-input>
+            </div>
+            <div class="col">
+              <vue-tel-input
+                class="mobileNumber"
+                v-model="formData.opportunity_landline_sec"
+                @on-input="landlineInputSec"
+              ></vue-tel-input>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <q-input
+                dark
+                v-model="formData.opportunity_postal_address_sec"
+                square
+                type="textarea"
+                label="Postal Address"
+              />
+            </div>
+            <div class="col">
+              <q-input
+                dark
+                v-model="formData.opportunity_residental_address_sec"
+                square
+                type="textarea"
+                label="Residential Address"
+              />
+            </div>
+          </div>
+        </div>
+
+        <q-stepper-navigation>
+          <q-btn @click="submitForm" color="primary" label="Continue" />
+        </q-stepper-navigation>
       </q-step>
 
       <q-step
@@ -160,6 +288,7 @@
         title="Additional Details"
         icon="account_circle"
         :done="step > 2"
+        :header-nav="step > 2"
       >
         <div class="row">
           <div class="col">
@@ -403,6 +532,16 @@
             </div>
           </div>
         </div>
+        <q-stepper-navigation>
+          <q-btn @click="submitForm" color="primary" label="Continue" />
+          <q-btn
+            flat
+            @click="step -= 1"
+            color="primary"
+            label="Back"
+            class="q-ml-sm"
+          />
+        </q-stepper-navigation>
       </q-step>
 
       <q-step
@@ -411,6 +550,7 @@
         title="Attach Required Files"
         icon="upload"
         :done="step > 3"
+        :header-nav="step > 2"
       >
         <q-form id="formotp">
           <q-file
@@ -427,31 +567,92 @@
               <q-icon name="attach_file" />
             </template>
           </q-file>
-          <q-file
-            dark
-            ref="uploadId"
-            filled
-            v-model="formData.opportunity_uploadId"
-            @input="fileUpload"
-            label="Upload Id/Passport Photo"
-            hint="Upload Id/Passport Photo"
-          >
-            <template v-slot:before>
-              <q-icon name="attach_file" />
-            </template>
-          </q-file>
-          <q-file
-            filled
-            dark
-            v-model="formData.opportunity_addressproof"
-            @input="fileUpload"
-            label="Proof of Address"
-            hint="Proof of Address"
-          >
-            <template v-slot:before>
-              <q-icon name="attach_file" />
-            </template>
-          </q-file>
+          <div v-if="formData.opportunity_client_no === '2 Person'">
+            <div class="row">
+              <div class="col">
+                <q-file
+                  dark
+                  ref="uploadId"
+                  filled
+                  v-model="formData.opportunity_uploadId"
+                  @input="fileUpload"
+                  label="Upload Id/Passport Photo"
+                  hint="Upload Id/Passport Photo"
+                >
+                  <template v-slot:before>
+                    <q-icon name="attach_file" />
+                  </template>
+                </q-file>
+                <q-file
+                  filled
+                  dark
+                  v-model="formData.opportunity_addressproof"
+                  @input="fileUpload"
+                  label="Proof of Address"
+                  hint="Proof of Address"
+                >
+                  <template v-slot:before>
+                    <q-icon name="attach_file" />
+                  </template>
+                </q-file>
+              </div>
+              <div class="col">
+                <q-file
+                  dark
+                  ref="uploadId"
+                  filled
+                  v-model="formData.opportunity_uploadId_sec"
+                  @input="fileUpload"
+                  label="Upload Id/Passport Photo of Second Person"
+                  hint="Upload Id/Passport Photo of Second Person"
+                >
+                  <template v-slot:before>
+                    <q-icon name="attach_file" />
+                  </template>
+                </q-file>
+                <q-file
+                  filled
+                  dark
+                  v-model="formData.opportunity_addressproof_sec"
+                  @input="fileUpload"
+                  label="Proof of Address of Second Person"
+                  hint="Proof of Address of Second Person"
+                >
+                  <template v-slot:before>
+                    <q-icon name="attach_file" />
+                  </template>
+                </q-file>
+              </div>
+            </div>
+          </div>
+          <div v-else>
+            <q-file
+              dark
+              ref="uploadId"
+              filled
+              v-model="formData.opportunity_uploadId"
+              @input="fileUpload"
+              label="Upload Id/Passport Photo"
+              hint="Upload Id/Passport Photo"
+            >
+              <template v-slot:before>
+                <q-icon name="attach_file" />
+              </template>
+            </q-file>
+            <q-file
+              filled
+              dark
+              v-model="formData.opportunity_addressproof"
+              @input="fileUpload"
+              label="Proof of Address"
+              hint="Proof of Address"
+            >
+              <template v-slot:before>
+                <q-icon name="attach_file" />
+              </template>
+            </q-file>
+          </div>
+
           <q-file
             filled
             dark
@@ -489,9 +690,24 @@
             </template>
           </q-file>
         </q-form>
+        <q-stepper-navigation>
+          <q-btn @click="submitForm" color="primary" label="Continue" />
+          <q-btn
+            flat
+            @click="step -= 1"
+            color="primary"
+            label="Back"
+            class="q-ml-sm"
+          />
+        </q-stepper-navigation>
       </q-step>
 
-      <q-step :name="4" title="Sales Agent" icon="support_agent">
+      <q-step
+        :name="4"
+        title="Sales Agent"
+        icon="support_agent"
+        :header-nav="step > 3"
+      >
         <div class="row">
           <div class="col">
             <q-input
@@ -510,26 +726,18 @@
             ></vue-tel-input>
           </div>
         </div>
-      </q-step>
 
-      <template v-slot:navigation>
-        <span>{{ error }}</span>
         <q-stepper-navigation>
+          <q-btn color="primary" @click="submitForm" label="Submit" />
           <q-btn
-            @click="submitForm"
-            color="primary"
-            :label="step === 4 ? 'Submit' : 'Next'"
-          />
-          <q-btn
-            v-if="step > 1"
             flat
+            @click="step -= 1"
             color="primary"
-            @click="$refs.stepper.previous()"
             label="Back"
             class="q-ml-sm"
           />
         </q-stepper-navigation>
-      </template>
+      </q-step>
     </q-stepper>
   </div>
 </template>
@@ -545,56 +753,78 @@ export default {
   setup() {
     const store = useStore();
     const step = ref(1);
+    const done = ref(false);
     const firstnameRef = ref(null);
     const lastnameRef = ref(null);
     const idRef = ref(null);
     const emailRef = ref(null);
-
-    const countryCode = null;
-    const countryCodeOptions = ["+44", "+91", "+54"];
+    const firstnameSecRef = ref(null);
+    const lastnameSecRef = ref(null);
+    const idSecRef = ref(null);
+    const emailSecRef = ref(null);
     const formData = store.state.formData;
-    const error = "";
     const load = useQuasar();
 
     const submitForm = () => {
-      console.log("submit clicked", formData);
+      if (formData.opportunity_client_no === "1 Person") {
+        formData.opportunity_firstname_sec = "";
+        formData.opportunity_lastname_sec = "";
+        formData.opportunity_id_sec = null;
+        formData.opportunity_email_sec = "";
+        formData.opportunity_mobile_sec = null;
+        formData.opportunity_landline_sec = null;
+        formData.opportunity_postal_address_sec = "";
+        formData.opportunity_residental_address_sec = "";
+        formData.opportunity_uploadId_sec = null;
+        formData.opportunity_addressproof_sec = null;
+      }
       if (step.value === 4) {
-        console.log("store", store, store.value);
         store.dispatch("postData", formData);
       } else if (step.value === 1) {
         firstnameRef.value?.validate();
         lastnameRef.value?.validate();
         idRef.value?.validate();
         emailRef.value?.validate();
+        firstnameSecRef.value?.validate();
+        lastnameSecRef.value?.validate();
+        idSecRef.value?.validate();
+        emailSecRef.value?.validate();
 
         if (
           firstnameRef.value?.hasError ||
           lastnameRef.value?.hasError ||
           idRef.value?.hasError ||
-          emailRef.value?.hasError
+          emailRef.value?.hasError ||
+          firstnameSecRef.value?.hasError ||
+          lastnameSecRef.value?.hasError ||
+          idSecRef.value?.hasError ||
+          emailSecRef.value?.hasError
         ) {
           // form has error
           console.log("error");
         } else {
-          console.log(step, step.value);
+          done.value = true;
           step.value += 1;
         }
       } else {
+        done.value = true;
         step.value += 1;
-        // step.value?.next();
       }
     };
 
     const mobileInput = (number, phoneObject) => {
-      console.log(phoneObject.number, "phoneObject");
       return (formData.opportunity_mobile = phoneObject.number);
     };
     const landlineInput = (number, phoneObject) => {
-      console.log(phoneObject.number, "phoneObject");
+      return (formData.opportunity_landline = phoneObject.number);
+    };
+    const mobileInputSec = (number, phoneObject) => {
+      return (formData.opportunity_mobile = phoneObject.number);
+    };
+    const landlineInputSec = (number, phoneObject) => {
       return (formData.opportunity_landline = phoneObject.number);
     };
     const salesMobileInput = (number, phoneObject) => {
-      console.log(phoneObject.number, "phoneObject");
       return (formData.opportunity_sale_mobile = phoneObject.number);
     };
 
@@ -604,15 +834,18 @@ export default {
       lastnameRef,
       idRef,
       emailRef,
-      countryCode,
-      countryCodeOptions,
+      firstnameSecRef,
+      lastnameSecRef,
+      idSecRef,
+      emailSecRef,
       formData,
-      error,
       load,
       requiredRules: [(val) => (val && val.length > 0) || "Field Required"],
       submitForm,
       mobileInput,
       landlineInput,
+      mobileInputSec,
+      landlineInputSec,
       salesMobileInput,
     };
   },
@@ -627,7 +860,7 @@ export default {
         .post("http://localhost:3008/uploadfile", formData)
         .then((res) => {
           if (res) {
-            self.ipAddress = res.data
+            self.ipAddress = res.data;
             this.load.loading.hide();
             console.log(res);
           }
